@@ -1,0 +1,35 @@
+import os
+import threading
+
+search_word = 'Python'
+directory = './documents'
+
+def search_in_file(file_path, word):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            for line_number, line in enumerate(file, 1):
+                if word in line:
+                    print(f"Найдено в {file_path} на строке {line_number}: {line.strip()}")
+    except Exception as e:
+        print(f"Ошибка при чтении файла {file_path}: {e}")
+
+def worker(file_paths, word):
+    for file_path in file_paths:
+        search_in_file(file_path, word)
+
+def main():
+    files = [os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+    num_threads = 4
+    chunk_size = len(files) // num_threads if len(files) >= num_threads else 1
+    threads = []
+
+    for i in range(0, len(files), chunk_size):
+        thread = threading.Thread(target=worker, args=(files[i:i + chunk_size], search_word))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+if __name__ == "__main__":
+    main()
